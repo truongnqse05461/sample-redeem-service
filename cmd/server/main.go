@@ -6,6 +6,7 @@ import (
 	"sample-redeem-service/internal/service"
 
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func main() {
