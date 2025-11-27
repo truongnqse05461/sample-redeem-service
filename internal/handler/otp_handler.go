@@ -58,7 +58,7 @@ func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 		if err != nil {
 			msg = err.Error()
 		}
-		c.JSON(http.StatusOK, model.VerifyOTPResponse{ // User requested specific body, usually 200 OK with success: false is preferred for logic errors in this style
+		c.JSON(http.StatusBadRequest, model.VerifyOTPResponse{
 			Success: false,
 			Message: msg,
 		})
