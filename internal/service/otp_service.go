@@ -37,8 +37,8 @@ func (s *OTPService) SendOTP(email string) (string, error) {
 }
 
 func (s *OTPService) VerifyOTP(email, otp string) (bool, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	storedOTP, exists := s.otpStore[email]
 	if !exists {
@@ -49,12 +49,7 @@ func (s *OTPService) VerifyOTP(email, otp string) (bool, error) {
 		return false, errors.New("invalid OTP")
 	}
 
-	// Optional: Delete OTP after successful verification
-	// delete(s.otpStore, email) 
-	// Note: If we want to delete, we need a Write Lock (Lock/Unlock) instead of RLock.
-	// For this simple example, we'll keep it or maybe we should delete it to prevent replay?
-	// The user didn't specify, but "Verify OTP will check requested otp with stored OTP" implies simple check.
-	// Let's keep it simple for now.
+	delete(s.otpStore, email)
 
 	return true, nil
 }
