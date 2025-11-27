@@ -19,34 +19,54 @@ func NewOTPHandler(s *service.OTPService) *OTPHandler {
 func (h *OTPHandler) SendOTP(c *gin.Context) {
 	var req model.SendOTPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, model.SendOTPResponse{
+			Success: false,
+			Message: err.Error(),
+		})
 		return
 	}
 
-	if err := h.service.SendOTP(req.Phone); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+	otp, err := h.service.SendOTP(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.SendOTPResponse{
+			Success: false,
+			Message: "Failed to generate OTP",
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "OTP sent successfully"})
+	c.JSON(http.StatusOK, model.SendOTPResponse{
+		Success: true,
+		OTP:     otp,
+		Message: "OTP generated successfully",
+	})
 }
 
 func (h *OTPHandler) VerifyOTP(c *gin.Context) {
 	var req model.VerifyOTPRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, model.VerifyOTPResponse{
+			Success: false,
+			Message: err.Error(),
+		})
 		return
 	}
 
-	valid, err := h.service.VerifyOTP(req.Phone, req.OTP)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	valid, err := h.service.VerifyOTP(req.Email, req.OTP)
+	if err != nil || !valid {
+		msg := "Invalid OTP"
+		if err != nil {
+			msg = err.Error()
+		}
+		c.JSON(http.StatusOK, model.VerifyOTPResponse{ // User requested specific body, usually 200 OK with success: false is preferred for logic errors in this style
+			Success: false,
+			Message: msg,
+		})
 		return
 	}
 
-	if valid {
-		c.JSON(http.StatusOK, gin.H{"message": "Identity verification successful"})
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid OTP"})
-	}
+	c.JSON(http.StatusOK, model.VerifyOTPResponse{
+		Success: true,
+		Message: "Identity verification successful",
+	})
 }
