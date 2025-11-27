@@ -21,6 +21,10 @@ func main() {
 	r := gin.Default()
 
 	// Routes
+	r.GET("/health", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
 	api := r.Group("/api")
 	{
 		otp := api.Group("/otp")
